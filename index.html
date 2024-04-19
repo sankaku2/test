@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bootstrap demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<style>
+  .calc-btn {
+    width: 75px;
+    height: 75px;
+  }
+
+  .color2 {
+    background-color: yellow;
+  }
+
+  .color1 {
+    background-color: blue;
+  }
+
+  #questionBoard>div {
+    position: absolute;
+  }
+</style>
+
+<body>
+  <div id="startDisplay" class="d-flex flex-column justify-content-center align-items-center d-none">
+    <div id="circle" class="rounded-circle d-flex align-items-center justify-content-center fs-1 text-white my-3"
+      style="width:100px;height:100px;background-color:red;">
+      3
+    </div>
+    <pre class="d-flex align-items-center justify-content-center my-3" style="white-space:pre-line;">
+      彡 ⌒ ミ
+      (´・ω・`)
+      ０　　０
+  &emsp;&nbsp;∪∪
+    </pre>
+    <div class="text-center fs-1">
+      パワー充電中
+    </div>
+  </div>
+  <!--スコアを表示-->
+  <div id="scoreDisplay" class="d-flex flex-column justify-content-cent align-items-center d-none mt-5 pt-5 fs-2">
+    <div>
+      score:<div class="d-inline" id="scoreBoard"></div>
+    </div>
+    <!--<button type="button" class="btn btn-primary m-1 p-1">twitterでつぶやく</button>-->
+    <button type="button" class="btn btn-primary m-1 p-1" id="restartButton">リスタート</button>
+  </div>
+  <header id="header">
+    <div class="d-flex justify-content-between">
+      <div>
+        素数判定 素数だと思ったらT、合成数だと思ったらF
+      </div>
+      <form class="form-group">
+        <select class="form-control" id="select">
+          <option value="light">light</option>
+          <option value="dark">dark</option>
+        </select>
+      </form>
+    </div>
+  </header>
+  <main id="main">
+    <div class="row">
+      <pre class="col-md-6">
+          彡 ⌒ ミ 3分でどれくらいとけるかな
+      　 (´・ω・`) 注意：音がうるさいかもしれません
+      　  ０　　０
+      　　 ∪∪
+        </pre>
+      <div class="col-md-6 bg-info">
+        <div class="text-center my-3">
+          <nav class="d-inline" id="time">180</nav>/180sec
+        </div>
+        <div class="text-center my-3">
+          <button class="btn btn-primary" id="startButton">スタート</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12 col-md-6 text-center d-flex justify-content-center align-items-md-center border rounded mt-1"
+        style="font-size:100px;position:relative;" id="questionBoard">
+        <!--問題を表示する-->
+        <div id="examDisplay">a</div>
+        <div class="border border-danger rounded-circle border-5 d-none" id="answerCircle"
+          style="width:150px;height:150px;">
+        </div>
+        <div class="text-primary d-none" id="cross" style="font-size:300px">×</div>
+      </div>
+      <div id="keyboard" class="col-12 col-md-6 border">
+        <div class="d-flex align-items-center justify-content-center" style="height:500px;">
+          <button type="button" id="T" class="btn btn-secondary fs-1 m-1 calc-btn">T</button>
+          <div style="width:50px;"></div>
+          <button type="button" id="F" class="btn btn-secondary fs-1 m-1 calc-btn">F</button>
+        </div>
+      </div>
+    </div>
+  </main>
+  <!---->
+  <script>
+    let countId; //スタート時の演出のclearIntervalのid
+    let answer; //問題の正解
+    let score = 0; //解けた問題数
+    let color = 2; //スタート時の色の閾値
+    let numberArr = [];
+    let correctAudio = new Audio("素数correct.mp3");
+    let errAudio = new Audio("素数err.mp3");
+    correctAudio.controls = true;
+    errAudio.controls = true;
+    const select = document.getElementById("select");
+    select.addEventListener("change", () => {
+      if (select.value === "dark") {
+        document.body.setAttribute("data-bs-theme", "dark");
+      } else {
+        document.body.setAttribute("data-bs-theme", "light");
+      }
+    })
+
+    function exam() {
+      let num = Math.trunc((Math.random() * 299) + 2);
+      let bubble = num;
+      numberArr = [];
+      if (num % 2 === 0 || num % 3 === 0 || num % 5 === 0) {
+        exam();
+      } else {
+        let k = 0;
+        for (let i = 2; bubble >= i; i++) {
+          if (bubble % i === 0) {
+            bubble = bubble / i;
+            numberArr[k] = i;
+            i--;
+            k++;
+          }
+          if (k === 1) {
+            answer = "True";
+          } else {
+            answer = "False";
+          }
+          /*if (num % i === 0) {
+            answer = "False";
+            break;
+          } else if (i === 2) {
+            answer = "True";
+            break;
+          }*/
+        }
+        console.log(numberArr);
+        document.getElementById("examDisplay").textContent = num;
+      }
+
+    }
+
+    //始まるときのカウントダウンが表示される関数
+    function startDirection() {
+      document.getElementById("main").style.display = "none";
+      document.getElementById("header").style.display = "none";
+      document.getElementById("startDisplay").classList.remove("d-none");
+      countId = setInterval(function () {
+        if (color == 0) {
+          //
+          document.getElementById("main").style.display = "";
+          document.getElementById("header").style.display = "";
+          document.getElementById("startDisplay").classList.add("d-none");
+          //
+          clearInterval(countId);
+          //
+          color = 2;
+          score = 0;
+          time = 180;
+          document.getElementById("circle").textContent = "3";
+          document.getElementById("time").textContent = `${time}`;
+          document.getElementById("circle").classList.remove("color2", "color1");
+          document.getElementById("circle").style.backgroundColor = "red";
+          //
+          exam();
+          let timeId = setInterval(function () {
+            time--;
+            document.getElementById("time").textContent = `${time}`;
+            if (time == 0) {
+              //リザルト画面に切り替え
+              document.getElementById("main").style.display = "none";
+              document.getElementById("header").style.display = "none";
+              document.getElementById("scoreDisplay").classList.remove("d-none");
+              //スコアを書く
+              document.getElementById("scoreBoard").textContent = `${score}`;
+              //
+              clearInterval(timeId);
+            }
+          }, 1000);
+          return 0;
+        }
+        document.getElementById("circle").style.backgroundColor = "";
+        document.getElementById("circle").classList.add(`color${color}`);
+        document.getElementById("circle").textContent = `${color}`;
+        color--;
+      }, 1000);
+    }
+    //スタートボタンを押したときのイベントハンドラ
+    document.getElementById("startButton").addEventListener("click", function () {
+      startDirection();
+    });
+
+    //リスタートボタンを押したときのイベントハンドラ
+    document.getElementById("restartButton").addEventListener("click", function () {
+      document.getElementById("scoreDisplay").classList.add("d-none");
+      startDirection();
+    });
+    //キーボードを押したときのイベントハンドラ
+    document.getElementById("T").addEventListener("click", function () {
+      if (answer === "True") {
+        score++;
+        document.getElementById("answerCircle").classList.remove("d-none");
+        correctAudio.currentTime = 0;
+        correctAudio.play();
+        answer = "";
+        setTimeout(() => {
+          document.getElementById("answerCircle").classList.add("d-none");
+          exam();
+        }, 1000);
+      } else if (answer === "False") {
+        document.getElementById("cross").classList.remove("d-none");
+        errAudio.currentTime = 0;
+        errAudio.play();
+        answer = "";
+        setTimeout(() => {
+          document.getElementById("cross").classList.add("d-none");
+          let string = "";
+          for (const number of numberArr) {
+            string += number + "×";
+          }
+          string = string.slice(0, -1);
+          console.log(string);
+          document.getElementById("examDisplay").textContent = string;
+        }, 1000);
+        setTimeout(() => {
+          exam();
+        }, 5000);
+      }
+    });
+    document.getElementById("F").addEventListener("click", function () {
+      if (answer === "False") {
+        score++;
+        document.getElementById("answerCircle").classList.remove("d-none");
+        correctAudio.currentTime = 0;
+        correctAudio.play();
+        answer = "";
+        setTimeout(() => {
+          document.getElementById("answerCircle").classList.add("d-none");
+          correctAudio.pause();
+          exam();
+        }, 1000);
+      } else if (answer === "True") {
+        document.getElementById("cross").classList.remove("d-none");
+        errAudio.currentTime = 0;
+        errAudio.play();
+        answer = "";
+        setTimeout(() => {
+          document.getElementById("cross").classList.add("d-none");
+          errAudio.pause();
+          exam();
+        }, 1000);
+      }
+    });
+
+  </script>
+  <!---->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
